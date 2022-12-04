@@ -24,10 +24,10 @@ int main()
 
         cout << a << "-" << b << "," << c << "-" << d << " : ";
 
-        auto contains = (a <= c && d <= b) || (c <= a && b <= d);
-        cnt += contains;
+        auto overlapp = (c <= b && b <= d) || (a <= d && d <= b);
+        cnt += overlapp;
 
-        cout << contains << '\n';
+        cout << overlapp << '\n';
     }
 
     cout << cnt << endl;
