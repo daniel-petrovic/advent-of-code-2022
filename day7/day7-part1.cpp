@@ -138,7 +138,8 @@ int main()
 
     calc_sizes(root.get());
     report_sizes(root.get(), 0);
-    size_t total;
+
+    size_t total{};
     calc_total_100000(root.get(), total);
     cout << endl << "total size: " << total << endl;
 }
