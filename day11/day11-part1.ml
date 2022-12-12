@@ -3,8 +3,8 @@ let filter_true test op list = List.filter test (List.map op list)
 let filter_false test op list = List.filter (negated test) (List.map op list);;
 
 (* Monkey 0*)
-let m0times = ref 1
-let m0 = ref [56; 56; 92; 65; 71; 62; 79]
+let m0times = ref 0
+let m0 = ref [56; 56; 92; 65; 71; 61; 79]
 let m0op x = Float.to_int(Int.to_float(x * 7) /. 3.)
 let m0test x = (x mod 3) = 0
 
