@@ -2,62 +2,57 @@ let negated f = (fun x -> not (f x))
 let filter_true test op list = List.filter test (List.map op list)
 let filter_false test op list = List.filter (negated test) (List.map op list);;
 
-let big_int_list list = 
-    List.map Big_int.big_int_of_int list
+let mod_value = 3 * 11 * 7 * 2 * 19 * 5 * 17 * 13
 
 (* Monkey 0*)
-let m1times = ref 1
-let m0 = ref (big_int_list [56; 56; 92; 65; 71; 61; 79])
-let m0op x = Big_int.mult_big_int x (Big_int.big_int_of_int 8)
-let m0test x = Big_int.eq_big_int (Big_int.mod_big_int x (Big_int.big_int_of_int 3)) Big_int.zero_big_int
+let m0times = ref 0
+let m0 = ref [56; 56; 92; 65; 71; 61; 79]
+let m0op x = (x * 7) mod mod_value
+let m0test x = (x mod 3) = 0
 
 (* Monkey 1*)
 let m1times = ref 0
-let m1 = ref (big_int_list [61;85])
-let m1op x = Big_int.add_big_int x (Big_int.big_int_of_int 5)
-let m1test x =  Big_int.eq_big_int (Big_int.mod_big_int x (Big_int.big_int_of_int 11)) Big_int.zero_big_int
+let m1 = ref [61;85]
+let m1op x = (x + 5) mod mod_value
+let m1test x = (x mod 11) = 0
 
 (* Monkey 2*)
 let m2times = ref 0
-let m2 = ref (big_int_list [54; 96; 82; 78; 69])
-let m2op x = Big_int.mult_big_int x x
-let m2test x = Big_int.eq_big_int (Big_int.mod_big_int x (Big_int.big_int_of_int 7)) Big_int.zero_big_int
+let m2 = ref [54; 96; 82; 78; 69]
+let m2op x = (x * x) mod mod_value
+let m2test x = (x mod 7) = 0
 
 (* Monkey 3*)
 let m3times = ref 0
-let m3 = ref (big_int_list [57; 59; 65; 95])
-let m3op x = Big_int.add_big_int x (Big_int.big_int_of_int 4)
-let m3test x = Big_int.eq_big_int (Big_int.mod_big_int x (Big_int.big_int_of_int 2)) Big_int.zero_big_int
+let m3 = ref [57; 59; 65; 95]
+let m3op x = (x + 4) mod mod_value
+let m3test x = (x mod 2) = 0;;
 
 (* Monkey 4*)
 let m4times = ref 0
-let m4 = ref (big_int_list [62; 67; 80])
-let m4op x = Big_int.mult_big_int x (Big_int.big_int_of_int 17)
-let m4test x = Big_int.eq_big_int (Big_int.mod_big_int x  (Big_int.big_int_of_int 19)) Big_int.zero_big_int;;
+let m4 = ref [62; 67; 80]
+let m4op x = (x*17) mod mod_value
+let m4test x = (x mod 19) = 0;;
 
 (* Monkey 5*)
 let m5times = ref 0
-let m5 = ref (big_int_list [91])
-let m5op x = Big_int.add_big_int x (Big_int.big_int_of_int 7)
-let m5test x = Big_int.eq_big_int (Big_int.mod_big_int x (Big_int.big_int_of_int 5)) Big_int.zero_big_int;;
+let m5 = ref [91]
+let m5op x = (x+7) mod mod_value
+let m5test x = (x mod 5) = 0;;
 
 (* Monkey 6*)
 let m6times = ref 0
-let m6 = ref (big_int_list [79; 83; 64; 52; 77; 56; 63; 92])
-let m6op x = Big_int.add_big_int x (Big_int.big_int_of_int 6)
-let m6test x = Big_int.eq_big_int (Big_int.mod_big_int x (Big_int.big_int_of_int 17)) Big_int.zero_big_int;;
+let m6 = ref [79; 83; 64; 52; 77; 56; 63; 92]
+let m6op x = (x+6) mod mod_value
+let m6test x = (x mod 17) = 0;;
 
 (* Monkey 7*)
 let m7times = ref 0
-let m7 = ref (big_int_list [50; 97; 76; 96; 80; 56])
-let m7op x = Big_int.add_big_int x (Big_int.big_int_of_int 3)
-let m7test x = Big_int.eq_big_int (Big_int.mod_big_int x (Big_int.big_int_of_int 13)) Big_int.zero_big_int;;
+let m7 = ref [50; 97; 76; 96; 80; 56]
+let m7op x = (x+3) mod mod_value
+let m7test x = (x mod 13) = 0;;
 
-for i = 1 to 600 do
-        print_string "iteration: ";
-        print_int i;
-        print_newline ();
-
+for _ = 1 to 10_000 do
   (* Round *)
   m0times := m0times.contents + List.length m0.contents;
   m3 := List.append m3.contents (filter_true m0test m0op m0.contents);
@@ -100,23 +95,16 @@ for i = 1 to 600 do
   m7 := [];
 done;;
 
-(*
 let print_int_space (x: int) = 
   print_int x;
-  print_string " ";
-  ()
-
-let print_string_space (x: string) = 
-  print_string x;
   print_string " ";
   ()
 
 let print (label:string) list =
   print_newline ();
   print_string label;
-  List.iter print_string_space (List.map Big_int.string_of_big_int list);
+  List.iter print_int_space list;
   print_newline ()
-*)
 
 let print_times monkey times = 
   print_string "Monkey";
@@ -127,7 +115,6 @@ let print_times monkey times =
   print_newline ()
   
 
-(*
 let _ = print "m0: " m0.contents
 let _ = print "m1: " m1.contents
 let _ = print "m2: " m2.contents
@@ -136,7 +123,6 @@ let _ = print "m4: " m4.contents
 let _ = print "m5: " m5.contents
 let _ = print "m6: " m6.contents
 let _ = print "m7: " m7.contents
-*)
 
 let _ = print_newline ()
 
