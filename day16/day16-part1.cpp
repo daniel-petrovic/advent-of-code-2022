@@ -13,7 +13,7 @@ static constexpr unsigned NODES_MAX = 54; // from input
 int memo[NUM_NONZERO_NODES][NODES_MAX][TIME_MAX+1];
 
 void read_graph();
-int solve(int u, uint64_t opened, int time_left, int flow);
+int solve(int u, uint64_t opened, int time_left, int flow, int debug_level);
 
 int main()
 {
@@ -28,11 +28,12 @@ int main()
     cout << V-cnt_zero << " nodes with flow > 0\n";
 
     uint64_t  opened = 0;
-    auto flow = solve(Vindex["AA"], opened, 30, 0);
+    int debug_level = 0;
+    auto flow = solve(Vindex["AA"], opened, 30, 0, debug_level);
     cout << "flow = " << flow << endl;
 }
 
-int solve(int u, uint64_t opened, int time_left, int flow)
+int solve(int u, uint64_t opened, int time_left, int flow, int debug_level)
 {
     if (time_left <= 1) // becuse open takes 1min
         return flow;
@@ -40,22 +41,25 @@ int solve(int u, uint64_t opened, int time_left, int flow)
     auto& mem = memo[opened][u][time_left];
     if (mem > 0) return mem;
 
+    int m = 0;
+
     if (F[u] > 0 and (opened & (1<<u)) == 0) {
-        opened |= (1<<u);
-        --time_left;
-        flow += F[u]*time_left;
+        auto df = F[u]*time_left;
+
+        for (auto v : adj[u]) {
+            auto s = solve(v, opened | (1<<u), time_left-2, flow+df, debug_level+1);
+            m = max(m, s);
+        }
     }
 
     for (auto v : adj[u]) {
-        auto s = solve(v, opened, time_left-1, flow);
-        if (F[v] > 0) {
-            opened &= !(1<<v);
-        }
-        flow = max(flow, s);
+        auto s = solve(v, opened, time_left-1, flow, debug_level+1);
+        m = max(m, s);
     }
 
-    mem = flow;
-    return flow;
+
+    mem = m;
+    return m;
 }
 
 void read_graph()
