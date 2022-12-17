@@ -17,6 +17,10 @@ int solve(int u, uint64_t opened, int time_left, int debug_level);
 
 int main()
 {
+    for (int i1 = 0; i1 < NUM_NONZERO_NODES; ++i1)
+        for (int i2 = 0; i2 < NODES_MAX; ++i2)
+            for (int i3 = 0; i3 < TIME_MAX+1; ++i3)
+                    memo[i1][i2][i3] = -1;
     read_graph();
     int cnt_zero = 0;
     for (auto v : Vindex) {
@@ -39,7 +43,7 @@ int solve(int u, uint64_t opened, int time_left, int debug_level)
         return 0;
 
     auto& mem = memo[opened][u][time_left];
-    if (mem > 0)
+    if (mem >= 0)
     {
         return mem;
     }
