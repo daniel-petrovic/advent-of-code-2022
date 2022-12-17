@@ -44,7 +44,7 @@ int solve(int u, uint64_t opened, int time_left, int flow, int debug_level)
     int m = 0;
 
     if (F[u] > 0 and (opened & (1<<u)) == 0) {
-        auto df = F[u]*time_left;
+        auto df = F[u]*(time_left-1);
 
         for (auto v : adj[u]) {
             auto s = solve(v, opened | (1<<u), time_left-2, flow+df, debug_level+1);
@@ -58,7 +58,7 @@ int solve(int u, uint64_t opened, int time_left, int flow, int debug_level)
     }
 
 
-    mem = m;
+    //mem = m;
     return m;
 }
 

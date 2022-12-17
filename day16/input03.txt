@@ -1,0 +1,2 @@
+Valve AA has flow rate=1; tunnel lead to valve BB
+Valve BB has flow rate=10; tunnel lead to valve AA
