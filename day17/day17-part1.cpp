@@ -1,221 +1,168 @@
 #include <bits/stdc++.h>
 using namespace std;
+using namespace std::literals;
 
-using pii = pair<int,int>;
-using vpii = vector<pii>;
-
-using Shape = vpii;
-
-
-struct Box {
-    int x{}; // x of bottom left
-    int y{}; // y of bottom left
-    int w{}; // width
-    int h{}; // height
-
-    int left() const noexcept { return x;};
-    int right() const noexcept { return x + w - 1; }
-    int top() const noexcept { return y + h -1; }
-    int bottom() const noexcept { return y; }
-};
-
-struct Rock {
-    Rock() = default;
-    Rock(Shape s) {
-        shape = std::move(s);
-        int xmin = INT_MAX;
-        int xmax = 0;
-        int ymin = INT_MAX; 
-        int ymax = 0;
-        for (auto [x,y] : shape)
-        {
-            xmin = min(xmin, x);
-            xmax = max(xmax, x);
-            ymin = min(ymin, y);
-            ymax = max(ymax, y );
-        }
-
-        box.w = xmax - xmin + 1;
-        box.h = ymax - ymin + 1;
-    }
-    Shape shape;
-    Box box;
-};
+static constexpr int YMAX = 5000;
+static constexpr int XMAX = 7;
+char grid[YMAX][XMAX];
 
 /* y
  * ^
  * |
  * |
  * |
- * |
- * +-----------> x
-     
+ * +--------> x
+ */
 
-*/
+void draw_grid(const int y)
+{
+    cout << endl;
+    for (int yy = y; yy >= 0; --yy) {
+        for (int xx = 0; xx < XMAX; ++xx)
+            cout << grid[yy][xx];
+        cout << endl;
+    }
+    cout << endl;
+}
 
-// #### y==0
-Shape S1 = { {0, 0}, {1, 0}, {2, 0}, {3, 0} };
+constexpr int height(string_view shape)
+{
+    int ret = 0;
+    for (auto c : shape) 
+        ret += c == '\n';
+    return ret + 1;
+}
 
-//       .#. y==2
-//       ### y==1
-//       .#. y==0
-// x     012
-Shape S2 = {
-        {1, 2},
-        {0, 1}, {1, 1}, {2, 1},
-        {1, 0}};
-
-//       ..# y==2
-//       ..# y==1
-//       ### y==0
-// x     012
-Shape S3 = {
-    {2,2},
-    {2,1},
-    {0,0}, {1,0}, {2,0}
-};
-
-//  # y==3
-//  #
-//  #
-//  # y==0
-//x 0
-Shape S4 = {
-    {0,3},{0,2},{0,1},{0,0}
-};
-
-//  ## y==1
-//  ## y==0
-//x 01
-Shape S5 = {
-    {0,1},{1,1},
-    {0,0},{1,0}
-};
-
-
-bool can_push_to(int x0, int y0, const Rock& f);
-void push(int x0, int y0, Rock& f);
-
-static constexpr int XMAX = 7; 
-static constexpr int YMAX = 10'000;
-bool occupied[YMAX][XMAX];
-
+constexpr int width(string_view shape)
+{
+    return find(shape.begin(), shape.end(), '\n') - shape.begin();
+}
 
 int main()
 {
-    for (int j = 0; j < YMAX; ++j) {
-        for (int i = 0; i < XMAX; ++i)
-            occupied[j][i] = false;
-        }
+    for (int i = 0; i < YMAX; ++i)
+        for (int j = 0; j < XMAX; ++j)
+            grid[i][j] = '.';
+    
+    constexpr auto shapes = array {
+        "####"sv,
 
-    auto rocks = array {Rock{S1}, Rock{S2}, Rock{S3}, Rock{S4}, Rock{S5}};
+        ".#.\n"
+        "###\n"
+        ".#."sv,
 
-    auto commands = string(istream_iterator<char>{cin}, istream_iterator<char>{});
+        "..#\n"
+        "..#\n"
+        "###"sv,
 
-    auto draw = [&] {
-        const auto Y = 20;
-        cout << endl;
-        for (int y = Y; y >= 0; --y) {
-            for (int x = 0; x < XMAX; ++x) {
-                char c = occupied[y][x] ? '#' : '.';
-                cout << c;
-            }
-            cout << endl;
-        }
-        cout << endl;
+        "#\n"
+        "#\n"
+        "#\n"
+        "#"sv,
+
+        "##\n"
+        "##"sv
     };
 
-    Rock rock;
+    //draw_grid(20);
 
-    for (int i=0, j=0, x0=2, y0=3; i<2022; ++i, y0 = rock.box.top() + 4)
-    {
-        //printf("rock %d starts fallinig at (%d, %d)\n", i, x0, y0);
-        rock = rocks[i%5];
-        rock.box.x = x0;
-        rock.box.y = y0;
+    static constexpr auto heights = array {
+        height(shapes[0]),
+        height(shapes[1]),
+        height(shapes[2]),
+        height(shapes[3]),
+        height(shapes[4]),
+    };
 
-        for (int x=x0, y=y0;;) {
+    static constexpr auto widths = array {
+        width(shapes[0]),
+        width(shapes[1]),
+        width(shapes[2]),
+        width(shapes[3]),
+        width(shapes[4]),
+    };
 
-            if (commands[j] != '>' and commands[j] != '<') {
-                throw "invalid command";
+    cout << "heights: ";
+    for (auto h : heights) cout << h << " ";
+    cout << endl;
+
+    cout << "widths: ";
+    for (auto w : widths) cout << w << " ";
+    cout << endl;
+
+    static_assert(shapes.size() == 5);
+
+    const auto commands = string(istream_iterator<char>(cin), istream_iterator<char>());
+    cout << "command: " << commands << endl;
+
+
+    auto can_move_to = [](int x0, int y0, string_view shape, int w, int h) {
+
+        if (x0 < 0) return false;
+        if (y0 < 0) return false;
+        if (x0 + w > XMAX) return false;
+
+        for (int i = 0; i < h; ++i)
+            for (int j = 0; j < w; ++j)
+            {
+                if (shape[i*(w+1) + j] == '#')
+                    if (grid[h-i-1+y0][j + x0] == '#')
+                        return false;
             }
 
-            auto x2 = x + ((commands[j] == '>') ? 1 : -1);
-            j = (j + 1) % commands.size();
-            //cout << "\t" << " '" << commands[j] << "' ";
+        return true;
+    };
 
-            if (can_push_to(x2, y, rock)) {
-                push(x2, y, rock);
-                x = x2;
-                //draw();
+    auto rest = [](int x0, int y0, string_view shape, int w, int h) {
+
+        for (int i = 0; i < h; ++i)
+            for (int j = 0; j < w; ++j)
+            {
+                if (shape[i*(w+1) + j] == '#')
+                    grid[h-i-1+y0][j + x0] = '#';
             }
 
-            auto y2 = y-1;
+        return true;
+    };
 
-            if (can_push_to(x, y2, rock)) {
-                push(x, y2, rock);
-                y = y2;
-                //draw();
+    int ystart = 3;
+    int cmd = 0;
+    int hmax = 0;
+
+    for (int counter = 0; counter < 2022; ++counter) {
+        int i = counter % shapes.size();
+        const auto shape = shapes[i];
+        const auto h = height(shape);
+        const auto w = width(shape);
+        
+        int x = 2;
+        int y = ystart;
+
+        while (true) {
+            char c = commands[cmd];
+            cmd = (cmd + 1) % commands.size();
+
+            if (c == '>' and can_move_to(x+1, y, shape, w, h)) {
+                ++x;
+            }
+
+            if (c == '<' and can_move_to(x-1, y, shape, w, h)) {
+                --x;
+            }
+
+            if (can_move_to(x, y-1, shape, w, h)) {
+                --y;
             }
             else {
-                //printf("\t: rock %d : cannot push down to y2=%d\n", i, y2);
+                hmax = max(hmax, y+h);
+                ystart = hmax + 3;
+                rest(x, y, shape, w, h);
                 break;
             }
         }
-    } 
-
-    //draw();
-
-    cout << "height = " << rock.box.top() + 1  << endl;
-}
-
-bool can_push_to(int x0, int y0, const Rock& f)
-{
-    if (x0 < 0) return false;
-    if (x0 + f.box.w > XMAX) return false;
-    if (y0 < 0) return false;
-
-
-    for (auto [xp,yp] : f.shape) {
-
-        xp += x0;
-        yp += y0;
-
-        bool new_xy = true;
-
-        for (auto [xx, yy] : f.shape) {
-            if (xp == f.box.x + xx and yp == f.box.y + yy) {
-                new_xy = false;
-                break;
-            }
-        }
-
-        if (new_xy and occupied[yp][xp])
-            return false;
     }
 
-    return  true;
-}
+    draw_grid(20);
 
-void push(int x0, int y0, Rock& f)
-{
-    if (x0 == f.box.x and y0 == f.box.y)
-        return;
-
-    //printf("\t pushing rock to (x0,y0)=(%d,%d)\n", x0, y0);
-
-    for (auto [xp, yp] : f.shape) {
-        auto x = f.box.x + xp;
-        auto y = f.box.y + yp;
-        occupied[y][x] = false;
-    }
-
-    f.box.x = x0;
-    f.box.y = y0;
-
-    for (auto [xp, yp] : f.shape) {
-        auto x = f.box.x + xp;
-        auto y = f.box.y + yp;
-        occupied[y][x] = true;
-    }
+    cout << "height: " << hmax  << endl;
 }
